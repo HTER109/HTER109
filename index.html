@@ -72,8 +72,8 @@
   <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
 
   <div class="tabs">
-    <div class="tab active" onclick="showTab(0)">Alarmas Externas 1</div>
-    <div class="tab" onclick="showTab(1)">Alarmas Externas 2</div>
+    <div class="tab active" onclick="showTab(0)">Alarmas Externas 11</div>
+    <div class="tab" onclick="showTab(1)">Alarmas Externas 22</div>
   </div>
 
   <div id="tab-0" class="tab-content active">
@@ -89,8 +89,8 @@
     // MQTT conexión WebSocket (Datos de EMQX Cloud)
     const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
       clientId: 'web_' + Math.random().toString(16).substr(2, 8),
-      username: 'Usuario EMQX ',
-      password: 'Contraseña EMQX'
+      username: 'Olivas',
+      password: 'Jangel27'
     });
 
   // 16 nombres de alarma para cada tópico
