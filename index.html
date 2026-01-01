@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitor de Alarmas ESP32</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      background-color: #f1f1f1;
+    }
+
+    .tab.active {
+      background-color: white;
+      font-weight: bold;
+    }
+
+    /* ✅ Color rojo cuando hay alarma activa */
+    .tab.alarm-active-tab {
+      background-color: red !important;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .alarm {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+    }
+
+    .active {
+      background-color: #ffe5e5;
+      color: #b30000;
+      font-weight: bold;
+    }
+
+    .inactive {
+      background-color: #e5ffe5;
+      color: #007000;
+    }
+
+    .byte-info {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab(0)">Alarmas Externas 1</div>
+    <div class="tab" onclick="showTab(1)">Alarmas Externas 2</div>
+  </div>
+
+  <div id="tab-0" class="tab-content active">
+    <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
+    <div id="alarms-external-OTY"></div>
+  </div>
+
+  <div id="tab-1" class="tab-content">
+    <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
+    <div id="alarms-external-ITR"></div>
+  </div>
+  <script>
+    // MQTT conexión WebSocket (Datos de EMQX Cloud)
+    const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
+      clientId: 'web_' + Math.random().toString(16).substr(2, 8),
+      username: 'Usuario EMQX ',
+      password: 'Contraseña EMQX'
+    });
+
+  // 16 nombres de alarma para cada tópico
+  const alarmNamesExternalOTY = [
+    "FALLA*ALIM*COM*OTY",
+    "GPO*ELEC*OPER*OTY",
+    "FALLA*FUS*DIST*A*OTY",
+    "FALLA*RECT*A*OTY",
+    "ALTA*TEMP*CX*OTY",
+    "FALLA*FUS*VOLTA*A*OTY",
+    "BAT*EN*OPER*A*OTY",
+    "BAJO*VOLTAJE*A*OTY",
+    "ALARMA LIBRE 1",
+    "ALARMA LIBRE 2",
+    "ALARMA LIBRE 3",
+    "ALARMA LIBRE 4",
+    "ALARMA LIBRE 5",
+    "ALARMA LIBRE 6",
+    "ALARMA LIBRE 7",
+    "ALARMA LIBRE 8"
+  ];
+
+  const alarmNamesExternalITR = [
+    "FALLA*ALIM*COM*ITR",
+    "GPO*ELEC*OPER*ITR",
+    "FALLA*FUS*DIST*A*ITR",
+    "FALLA*RECT*A*ITR",
+    "ALTA*TEMP*CX*ITR",
+    "FALLA*FUS*VOLTA*A*ITR",
+    "BAT*EN*OPER*A*ITR",
+    "BAJO*VOLTAJE*A*ITR",
+    "ALARMA LIBRE 1",
+    "ALARMA LIBRE 2",
+    "ALARMA LIBRE 3",
+    "ALARMA LIBRE 4",
+    "ALARMA LIBRE 5",
+    "ALARMA LIBRE 6",
+    "ALARMA LIBRE 7",
+    "ALARMA LIBRE 8"
+  ];
+
+  client.on('connect', () => {
+    console.log('✅ Conectado a EMQX');
+    client.subscribe('esp32/External_Alarms_1');
+    client.subscribe('esp32/External_Alarms_2');
+  });
+
+  client.on('message', (topic, message) => {
+    // ✅ Leer los 2 bytes correctamente
+    const highByte = message[0];
+    const lowByte = message[1];
+    const value = (highByte << 8) | lowByte; // uint16_t reconstruido
+
+    const binStr = value.toString(2).padStart(16, '0'); // ej: "0010110000101111"
+
+    if (topic === 'esp32/External_Alarms_1') {
+      document.getElementById('byte-external-OTY').textContent =
+        `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
+      updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
+    } else if (topic === 'esp32/External_Alarms_2') {
+      document.getElementById('byte-external-ITR').textContent =
+        `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
+      updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
+    }
+  });
+
+  // ✅ Ahora maneja 16 bits
+function updateAlarms(containerId, value16bit, alarmNames) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      let hasActiveAlarm = false;
+
+      for (let i = 15; i >= 0; i--) {
+        const bit = (value16bit >> i) & 1;
+        if (bit) hasActiveAlarm = true;
+
+        const div = document.createElement('div');
+        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+        div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
+        container.appendChild(div);
+      }
+
+      // Aplicar color rojo en la pestaña si hay al menos una alarma activa
+      if (containerId === 'alarms-external-OTY') {
+        toggleAlarmTab(0, hasActiveAlarm);
+      } else if (containerId === 'alarms-external-ITR') {
+        toggleAlarmTab(1, hasActiveAlarm);
+      }
+    }
+
+    function toggleAlarmTab(tabIndex, isActive) {
+      const tabs = document.querySelectorAll('.tab');
+      if (!tabs[tabIndex]) return;
+
+      if (isActive) {
+        tabs[tabIndex].classList.add('alarm-active-tab');
+      } else {
+        tabs[tabIndex].classList.remove('alarm-active-tab');
+      }
+    }
+
+    function showTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+        contents[i].classList.toggle('active', i === index);
+      });
+    }
+  </script>
+</body>
+</html>
