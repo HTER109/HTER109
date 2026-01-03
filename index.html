@@ -50,6 +50,59 @@ th, td { border: 1px solid #ccc; padding: 4px; text-align: center; }
 th { background-color: #f1f1f1; }
 
 button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer; }
+
+  .station-container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.station-block {
+  width: 260px;
+  height: 220px;
+  border-radius: 16px;
+  background: #e6e6e6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.3s ease;
+}
+
+.station-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.station-icon {
+  font-size: 64px;
+  margin: 10px 0;
+}
+
+.station-status {
+  font-weight: bold;
+}
+
+/* Estados */
+.station-ok {
+  background: #c8f7c5;
+}
+
+.station-alarm {
+  background: #f7c5c5;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+  
 </style>
 </head>
 
@@ -58,8 +111,10 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
 <h2>Estado de Alarmas ESP32 (EMQX)</h2>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab(0)">Estación OTY</div>
-  <div class="tab" onclick="showTab(1)">Estación ITR</div>
+  <div class="tab active" onclick="showTab(0)">Historial OTY</div>
+  <div class="tab" onclick="showTab(1)">Historial ITR</div>
+  <div class="tab" onclick="showTab(2)">Estación OTY</div>
+  <div class="tab" onclick="showTab(3)">Estación ITR</div>
 </div>
 
 <!-- ================= OTY ================= -->
@@ -110,6 +165,36 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
   </div>
 </div>
 
+<div id="tab-2" class="tab-content">
+
+  <div class="station-container">
+
+    <!-- Sala de baterías -->
+    <div class="station-block" id="oty-batteries">
+      <div class="station-title">Sala de Baterías</div>
+      <div class="station-icon">🔋</div>
+      <div class="station-status">NORMAL</div>
+    </div>
+
+    <!-- Planta CD -->
+    <div class="station-block" id="oty-rectifier">
+      <div class="station-title">Planta CD</div>
+      <div class="station-icon">⚡</div>
+      <div class="station-status">NORMAL</div>
+    </div>
+
+    <!-- Temperatura -->
+    <div class="station-block temp-block" id="oty-temp">
+      <div class="station-title">Temperatura</div>
+      <div class="station-icon">🌡️</div>
+      <div class="station-status">NORMAL</div>
+    </div>
+
+  </div>
+
+</div>
+
+
 <script>
 const client = mqtt.connect(
   'wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt',
@@ -150,6 +235,8 @@ client.on('message', (t, m) => {
   const value = (m[0] << 8) | m[1];
   updateStation('OTY', value);
   updateStation('ITR', value);
+  updateStationOTY(alarmBits);
+
   lastState = value;
 });
 
@@ -269,6 +356,56 @@ function showTab(i) {
     c.classList.toggle('active', x === i)
   );
 }
+
+function updateStationOTY(alarmBits) {
+
+  // === Sala de baterías ===
+  const batteries = document.getElementById("oty-batteries");
+
+  const batteryAlarm =
+    alarmBits[0] || // BAT EN OPER
+    alarmBits[1] || // BAJO VOLTAJE
+    alarmBits[2];   // FALLA FUS VOLTA
+
+  setStationState(batteries, batteryAlarm);
+
+  // === Planta CD ===
+  const rectifier = document.getElementById("oty-rectifier");
+
+  const rectifierAlarm =
+    alarmBits[3] || // FALLA RECT
+    alarmBits[4] || // FALLA FUS DIST
+    alarmBits[5];   // FALLA ALIM COM
+
+  setStationState(rectifier, rectifierAlarm);
+
+  // === Temperatura ===
+  const temp = document.getElementById("oty-temp");
+
+  const tempAlarm = alarmBits[6]; // ALTA TEMP
+
+  setStationState(temp, tempAlarm);
+}
+
+
+function setStationState(element, isAlarm) {
+  const status = element.querySelector(".station-status");
+
+  element.classList.remove("station-ok", "station-alarm");
+
+  if (isAlarm) {
+    element.classList.add("station-alarm");
+    status.textContent = "ALARMA";
+  } else {
+    element.classList.add("station-ok");
+    status.textContent = "NORMAL";
+  }
+}
+
+
+
+  
+  
 </script>
 
 
