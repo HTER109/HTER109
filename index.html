@@ -127,13 +127,21 @@ const alarmNames = [
 
 let alarmHistoryOTY = [];
 let alarmHistoryITR = [];
+
+let visibleHistoryOTY = [];
+let visibleHistoryITR = [];
+
 let lastState = 0;
 
 window.onload = () => {
   alarmHistoryOTY = JSON.parse(localStorage.getItem('alarmHistoryOTY_2026')) || [];
   alarmHistoryITR = JSON.parse(localStorage.getItem('alarmHistoryITR_2026')) || [];
-  renderHistory('OTY', alarmHistoryOTY);
-  renderHistory('ITR', alarmHistoryITR);
+
+  visibleHistoryOTY = [...alarmHistoryOTY];
+  visibleHistoryITR = [...alarmHistoryITR];
+
+  renderHistory('OTY', visibleHistoryOTY);
+  renderHistory('ITR', visibleHistoryITR);
 };
 
 client.on('connect', () => client.subscribe('esp32/External_Alarms_2'));
@@ -153,72 +161,116 @@ function updateStation(station, value) {
   for (let i = 15; i >= 0; i--) {
     const bit = (value >> i) & 1;
     const prev = (lastState >> i) & 1;
+
     if (bit && !prev) logAlarm(station, alarmNames[15 - i]);
     if (bit) active = true;
 
     const d = document.createElement('div');
-    d.className = 'alarm ' + (bit ? 'active':'inactive');
-    d.textContent = alarmNames[15 - i] + (bit ? ' 🔥':' ✅');
+    d.className = 'alarm ' + (bit ? 'active' : 'inactive');
+    d.textContent = alarmNames[15 - i] + (bit ? ' 🔥' : ' ✅');
     cont.appendChild(d);
   }
+
   toggleAlarmTab(station === 'OTY' ? 0 : 1, active);
 }
 
 function logAlarm(st, al) {
   const now = new Date();
-  const e = { date: now.toLocaleDateString('es-MX'),
-              time: now.toLocaleTimeString('es-MX'),
-              station: st, alarm: al };
+  const e = {
+    date: now.toLocaleDateString('es-MX'),
+    time: now.toLocaleTimeString('es-MX'),
+    station: st,
+    alarm: al
+  };
 
   const ref = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
   ref.push(e);
+
   localStorage.setItem(`alarmHistory${st}_2026`, JSON.stringify(ref));
-  renderHistory(st, ref);
+
+  showAllHistory(st); // refresca vista y tabla
 }
 
 function renderHistory(st, data) {
   const tb = document.getElementById(`alarm-history-${st}`);
   tb.innerHTML = '';
-  data.forEach(e=>{
-    tb.innerHTML += `<tr><td>${e.date}</td><td>${e.time}</td><td>${e.station}</td><td>${e.alarm}</td></tr>`;
+  data.forEach(e => {
+    tb.innerHTML += `<tr>
+      <td>${e.date}</td>
+      <td>${e.time}</td>
+      <td>${e.station}</td>
+      <td>${e.alarm}</td>
+    </tr>`;
   });
+
+  if (st === 'OTY') visibleHistoryOTY = data;
+  else visibleHistoryITR = data;
 }
 
 function filterHistory(st, d) {
-  const src = st==='OTY'?alarmHistoryOTY:alarmHistoryITR;
-  renderHistory(st, src.filter(e =>
-    new Date(e.date.split('/').reverse().join('-')).toISOString().slice(0,10) === d));
+  const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
+  const filtered = src.filter(e =>
+    new Date(e.date.split('/').reverse().join('-'))
+      .toISOString().slice(0,10) === d
+  );
+  renderHistory(st, filtered);
 }
 
 function showAllHistory(st) {
-  renderHistory(st, st==='OTY'?alarmHistoryOTY:alarmHistoryITR);
+  const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
+  renderHistory(st, [...src]);
 }
 
 function clearHistory(st) {
   if (!confirm(`¿Borrar historial de ${st}?`)) return;
-  if (st==='OTY'){ alarmHistoryOTY=[]; localStorage.removeItem('alarmHistoryOTY_2026'); }
-  else { alarmHistoryITR=[]; localStorage.removeItem('alarmHistoryITR_2026'); }
+
+  if (st === 'OTY') {
+    alarmHistoryOTY = [];
+    visibleHistoryOTY = [];
+    localStorage.removeItem('alarmHistoryOTY_2026');
+  } else {
+    alarmHistoryITR = [];
+    visibleHistoryITR = [];
+    localStorage.removeItem('alarmHistoryITR_2026');
+  }
+
   renderHistory(st, []);
 }
 
 function downloadCSV(st) {
-  const src = st==='OTY'?alarmHistoryOTY:alarmHistoryITR;
+  const src = st === 'OTY' ? visibleHistoryOTY : visibleHistoryITR;
+
   let csv = 'Fecha,Hora,Estación,Alarma\n';
-  src.forEach(e=>csv+=`"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`);
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download=`historial_${st}_2026.csv`; a.click();
+  src.forEach(e => {
+    csv += `"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `historial_${st}_2026.csv`;
+  a.click();
+
+  URL.revokeObjectURL(url);
 }
 
-function toggleAlarmTab(i,a){
-  document.querySelectorAll('.tab')[i].classList.toggle('alarm-active-tab',a);
+function toggleAlarmTab(i, a) {
+  document.querySelectorAll('.tab')[i]
+    .classList.toggle('alarm-active-tab', a);
 }
 
-function showTab(i){
-  document.querySelectorAll('.tab').forEach((t,x)=>t.classList.toggle('active',x===i));
-  document.querySelectorAll('.tab-content').forEach((c,x)=>c.classList.toggle('active',x===i));
+function showTab(i) {
+  document.querySelectorAll('.tab').forEach((t, x) =>
+    t.classList.toggle('active', x === i)
+  );
+  document.querySelectorAll('.tab-content').forEach((c, x) =>
+    c.classList.toggle('active', x === i)
+  );
 }
 </script>
+
 
 </body>
 </html>
