@@ -7,15 +7,9 @@
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-}
+body { font-family: Arial, sans-serif; }
 
-.tabs {
-  display: flex;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
+.tabs { display: flex; cursor: pointer; margin-bottom: 10px; }
 
 .tab {
   padding: 10px 20px;
@@ -24,34 +18,17 @@ body {
   background-color: #f1f1f1;
 }
 
-.tab.active {
-  background-color: white;
-  font-weight: bold;
-}
+.tab.active { background-color: white; font-weight: bold; }
 
-.tab.alarm-active-tab {
-  background-color: red !important;
-  color: white;
-}
+.tab.alarm-active-tab { background-color: red !important; color: white; }
 
-.tab-content {
-  display: none;
-  border: 1px solid #ccc;
-  padding: 10px;
-}
+.tab-content { display: none; border: 1px solid #ccc; padding: 10px; }
 
-.tab-content.active {
-  display: block;
-}
+.tab-content.active { display: block; }
 
-.main-container {
-  display: flex;
-  gap: 20px;
-}
+.main-container { display: flex; gap: 20px; }
 
-.alarms-container {
-  width: 50%;
-}
+.alarms-container { width: 50%; }
 
 .alarm {
   border: 1px solid #ccc;
@@ -61,42 +38,18 @@ body {
   font-size: 12px;
 }
 
-.active {
-  background-color: #ffe5e5;
-  color: #b30000;
-  font-weight: bold;
-}
+.active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
+.inactive { background-color: #e5ffe5; color: #007000; }
 
-.inactive {
-  background-color: #e5ffe5;
-  color: #007000;
-}
+.history-container { width: 50%; }
 
-.history-container {
-  width: 50%;
-}
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
+th, td { border: 1px solid #ccc; padding: 4px; text-align: center; }
 
-th, td {
-  border: 1px solid #ccc;
-  padding: 4px;
-  text-align: center;
-}
+th { background-color: #f1f1f1; }
 
-th {
-  background-color: #f1f1f1;
-}
-
-button, input[type="date"] {
-  margin: 5px 4px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
+button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer; }
 </style>
 </head>
 
@@ -117,20 +70,15 @@ button, input[type="date"] {
     </div>
 
     <div class="history-container">
-      <h3>Historial de Alarmas</h3>
-      <input type="date" id="dateFilterOTY" onchange="filterHistory(this.value)">
-      <button onclick="showAllHistory()">Mostrar todo</button>
-      <button onclick="clearHistory()">Limpiar historial</button>
-      <button onclick="downloadCSV()">Descargar Excel</button>
+      <h3>Historial OTY</h3>
+      <input type="date" onchange="filterHistory('OTY', this.value)">
+      <button onclick="showAllHistory('OTY')">Mostrar todo</button>
+      <button onclick="clearHistory('OTY')">Limpiar historial</button>
+      <button onclick="downloadCSV('OTY')">Descargar Excel</button>
 
       <table>
         <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estación</th>
-            <th>Alarma</th>
-          </tr>
+          <tr><th>Fecha</th><th>Hora</th><th>Estación</th><th>Alarma</th></tr>
         </thead>
         <tbody id="alarm-history-OTY"></tbody>
       </table>
@@ -146,20 +94,15 @@ button, input[type="date"] {
     </div>
 
     <div class="history-container">
-      <h3>Historial de Alarmas</h3>
-      <input type="date" id="dateFilterITR" onchange="filterHistory(this.value)">
-      <button onclick="showAllHistory()">Mostrar todo</button>
-      <button onclick="clearHistory()">Limpiar historial</button>
-      <button onclick="downloadCSV()">Descargar Excel</button>
+      <h3>Historial ITR</h3>
+      <input type="date" onchange="filterHistory('ITR', this.value)">
+      <button onclick="showAllHistory('ITR')">Mostrar todo</button>
+      <button onclick="clearHistory('ITR')">Limpiar historial</button>
+      <button onclick="downloadCSV('ITR')">Descargar Excel</button>
 
       <table>
         <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estación</th>
-            <th>Alarma</th>
-          </tr>
+          <tr><th>Fecha</th><th>Hora</th><th>Estación</th><th>Alarma</th></tr>
         </thead>
         <tbody id="alarm-history-ITR"></tbody>
       </table>
@@ -170,11 +113,8 @@ button, input[type="date"] {
 <script>
 const client = mqtt.connect(
   'wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt',
-  {
-    clientId: 'web_' + Math.random().toString(16).substr(2, 8),
-    username: 'Olivas',
-    password: 'Jangel27'
-  }
+  { clientId: 'web_' + Math.random().toString(16).substr(2,8),
+    username: 'Olivas', password: 'Jangel27' }
 );
 
 const alarmNames = [
@@ -185,128 +125,155 @@ const alarmNames = [
  "LIBRE 5","LIBRE 6","LIBRE 7","LIBRE 8"
 ];
 
-let alarmHistory = [];
+let alarmHistoryOTY = [];
+let alarmHistoryITR = [];
+
+let visibleHistoryOTY = [];
+let visibleHistoryITR = [];
+
 let lastState = 0;
 
 window.onload = () => {
-  const saved = localStorage.getItem('alarmHistory2026');
-  if (saved) {
-    alarmHistory = JSON.parse(saved);
-    renderHistory(alarmHistory);
-  }
+  alarmHistoryOTY = JSON.parse(localStorage.getItem('alarmHistoryOTY_2026')) || [];
+  alarmHistoryITR = JSON.parse(localStorage.getItem('alarmHistoryITR_2026')) || [];
+
+  visibleHistoryOTY = [...alarmHistoryOTY];
+  visibleHistoryITR = [...alarmHistoryITR];
+
+  renderHistory('OTY', visibleHistoryOTY);
+  renderHistory('ITR', visibleHistoryITR);
 };
 
-client.on('connect', () => {
-  client.subscribe('esp32/External_Alarms_2');
-});
+client.on('connect', () => client.subscribe('esp32/External_Alarms_2'));
 
-client.on('message', (topic, message) => {
-  const value = (message[0] << 8) | message[1];
-  updateStation("OTY", value);
-  updateStation("ITR", value);
+client.on('message', (t, m) => {
+  const value = (m[0] << 8) | m[1];
+  updateStation('OTY', value);
+  updateStation('ITR', value);
   lastState = value;
 });
 
 function updateStation(station, value) {
-  const container = document.getElementById(`alarms-${station}`);
-  container.innerHTML = '';
-  let hasActive = false;
+  const cont = document.getElementById(`alarms-${station}`);
+  cont.innerHTML = '';
+  let active = false;
 
   for (let i = 15; i >= 0; i--) {
     const bit = (value >> i) & 1;
     const prev = (lastState >> i) & 1;
 
-    if (bit && !prev) {
-      logAlarm(station, alarmNames[15 - i]);
-    }
+    if (bit && !prev) logAlarm(station, alarmNames[15 - i]);
+    if (bit) active = true;
 
-    if (bit) hasActive = true;
-
-    const div = document.createElement('div');
-    div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    div.textContent = alarmNames[15 - i] + (bit ? ' 🔥' : ' ✅');
-    container.appendChild(div);
+    const d = document.createElement('div');
+    d.className = 'alarm ' + (bit ? 'active' : 'inactive');
+    d.textContent = alarmNames[15 - i] + (bit ? ' 🔥' : ' ✅');
+    cont.appendChild(d);
   }
 
-  toggleAlarmTab(station === "OTY" ? 0 : 1, hasActive);
+  toggleAlarmTab(station === 'OTY' ? 0 : 1, active);
 }
 
-function logAlarm(station, alarm) {
+function logAlarm(st, al) {
   const now = new Date();
-  const entry = {
+  const e = {
     date: now.toLocaleDateString('es-MX'),
     time: now.toLocaleTimeString('es-MX'),
-    station,
-    alarm
+    station: st,
+    alarm: al
   };
-  alarmHistory.push(entry);
-  localStorage.setItem('alarmHistory2026', JSON.stringify(alarmHistory));
-  renderHistory(alarmHistory);
+
+  const ref = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
+  ref.push(e);
+
+  localStorage.setItem(`alarmHistory${st}_2026`, JSON.stringify(ref));
+
+  showAllHistory(st); // refresca vista y tabla
 }
 
-function renderHistory(data) {
-  ["OTY", "ITR"].forEach(st => {
-    const tbody = document.getElementById(`alarm-history-${st}`);
-    tbody.innerHTML = '';
-    data.forEach(e => {
-      const row = document.createElement('tr');
-      row.innerHTML = `<td>${e.date}</td><td>${e.time}</td><td>${e.station}</td><td>${e.alarm}</td>`;
-      tbody.appendChild(row);
-    });
+function renderHistory(st, data) {
+  const tb = document.getElementById(`alarm-history-${st}`);
+  tb.innerHTML = '';
+  data.forEach(e => {
+    tb.innerHTML += `<tr>
+      <td>${e.date}</td>
+      <td>${e.time}</td>
+      <td>${e.station}</td>
+      <td>${e.alarm}</td>
+    </tr>`;
   });
+
+  if (st === 'OTY') visibleHistoryOTY = data;
+  else visibleHistoryITR = data;
 }
 
-function filterHistory(date) {
-  const filtered = alarmHistory.filter(e =>
-    new Date(e.date.split('/').reverse().join('-')).toISOString().slice(0,10) === date
+function filterHistory(st, d) {
+  const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
+  const filtered = src.filter(e =>
+    new Date(e.date.split('/').reverse().join('-'))
+      .toISOString().slice(0,10) === d
   );
-  renderHistory(filtered);
+  renderHistory(st, filtered);
 }
 
-function showAllHistory() {
-  renderHistory(alarmHistory);
+function showAllHistory(st) {
+  const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
+  renderHistory(st, [...src]);
 }
 
-function clearHistory() {
-  if (confirm("¿Deseas borrar todo el historial de alarmas?")) {
-    alarmHistory = [];
-    localStorage.removeItem('alarmHistory2026');
-    renderHistory([]);
+function clearHistory(st) {
+  if (!confirm(`¿Borrar historial de ${st}?`)) return;
+
+  if (st === 'OTY') {
+    alarmHistoryOTY = [];
+    visibleHistoryOTY = [];
+    localStorage.removeItem('alarmHistoryOTY_2026');
+  } else {
+    alarmHistoryITR = [];
+    visibleHistoryITR = [];
+    localStorage.removeItem('alarmHistoryITR_2026');
   }
+
+  renderHistory(st, []);
 }
 
-function downloadCSV() {
+function downloadCSV(st) {
+  const src = st === 'OTY' ? visibleHistoryOTY : visibleHistoryITR;
+
   let csv = 'Fecha,Hora,Estación,Alarma\n';
-  alarmHistory.forEach(e => {
+  src.forEach(e => {
     csv += `"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`;
   });
 
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
+
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'historial_alarmas_2026.csv';
+  a.download = `historial_${st}_2026.csv`;
   a.click();
+
   URL.revokeObjectURL(url);
 }
 
-function toggleAlarmTab(index, active) {
-  const tabs = document.querySelectorAll('.tab');
-  active ? tabs[index].classList.add('alarm-active-tab')
-         : tabs[index].classList.remove('alarm-active-tab');
+function toggleAlarmTab(i, a) {
+  document.querySelectorAll('.tab')[i]
+    .classList.toggle('alarm-active-tab', a);
 }
 
 function showTab(i) {
-  document.querySelectorAll('.tab').forEach((t, idx) =>
-    t.classList.toggle('active', idx === i)
+  document.querySelectorAll('.tab').forEach((t, x) =>
+    t.classList.toggle('active', x === i)
   );
-  document.querySelectorAll('.tab-content').forEach((c, idx) =>
-    c.classList.toggle('active', idx === i)
+  document.querySelectorAll('.tab-content').forEach((c, x) =>
+    c.classList.toggle('active', x === i)
   );
 }
 </script>
 
+
 </body>
 </html>
+
 
 
