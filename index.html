@@ -44,13 +44,11 @@ body {
   display: block;
 }
 
-/* 🔹 CONTENEDOR PRINCIPAL */
 .main-container {
   display: flex;
   gap: 20px;
 }
 
-/* 🔹 ALARMAS A MEDIA PANTALLA */
 .alarms-container {
   width: 50%;
 }
@@ -74,7 +72,6 @@ body {
   color: #007000;
 }
 
-/* 🔹 HISTORIAL */
 .history-container {
   width: 50%;
 }
@@ -95,9 +92,9 @@ th {
   background-color: #f1f1f1;
 }
 
-button {
-  margin: 5px 0;
-  padding: 6px 12px;
+button, input[type="date"] {
+  margin: 5px 4px;
+  padding: 6px 10px;
   cursor: pointer;
 }
 </style>
@@ -116,12 +113,16 @@ button {
 <div id="tab-0" class="tab-content active">
   <div class="main-container">
     <div class="alarms-container">
-      <div id="alarms-external-OTY"></div>
+      <div id="alarms-OTY"></div>
     </div>
 
     <div class="history-container">
       <h3>Historial de Alarmas</h3>
+      <input type="date" id="dateFilterOTY" onchange="filterHistory(this.value)">
+      <button onclick="showAllHistory()">Mostrar todo</button>
+      <button onclick="clearHistory()">Limpiar historial</button>
       <button onclick="downloadCSV()">Descargar Excel</button>
+
       <table>
         <thead>
           <tr>
@@ -131,7 +132,7 @@ button {
             <th>Alarma</th>
           </tr>
         </thead>
-        <tbody id="alarm-history"></tbody>
+        <tbody id="alarm-history-OTY"></tbody>
       </table>
     </div>
   </div>
@@ -141,7 +142,27 @@ button {
 <div id="tab-1" class="tab-content">
   <div class="main-container">
     <div class="alarms-container">
-      <div id="alarms-external-ITR"></div>
+      <div id="alarms-ITR"></div>
+    </div>
+
+    <div class="history-container">
+      <h3>Historial de Alarmas</h3>
+      <input type="date" id="dateFilterITR" onchange="filterHistory(this.value)">
+      <button onclick="showAllHistory()">Mostrar todo</button>
+      <button onclick="clearHistory()">Limpiar historial</button>
+      <button onclick="downloadCSV()">Descargar Excel</button>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estación</th>
+            <th>Alarma</th>
+          </tr>
+        </thead>
+        <tbody id="alarm-history-ITR"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -156,7 +177,7 @@ const client = mqtt.connect(
   }
 );
 
-const alarmNamesOTY = [
+const alarmNames = [
  "FALLA ALIM COM","GPO ELEC OPER","FALLA FUS DIST",
  "FALLA RECT","ALTA TEMP","FALLA FUS VOLTA",
  "BAT EN OPER","BAJO VOLTAJE",
@@ -165,13 +186,13 @@ const alarmNamesOTY = [
 ];
 
 let alarmHistory = [];
-let lastStateOTY = 0;
+let lastState = 0;
 
 window.onload = () => {
   const saved = localStorage.getItem('alarmHistory2026');
   if (saved) {
     alarmHistory = JSON.parse(saved);
-    alarmHistory.forEach(addRowToTable);
+    renderHistory(alarmHistory);
   }
 };
 
@@ -181,33 +202,33 @@ client.on('connect', () => {
 
 client.on('message', (topic, message) => {
   const value = (message[0] << 8) | message[1];
-  updateAlarms(value);
+  updateStation("OTY", value);
+  updateStation("ITR", value);
+  lastState = value;
 });
 
-function updateAlarms(value) {
-  const container = document.getElementById('alarms-external-OTY');
+function updateStation(station, value) {
+  const container = document.getElementById(`alarms-${station}`);
   container.innerHTML = '';
-
   let hasActive = false;
 
   for (let i = 15; i >= 0; i--) {
     const bit = (value >> i) & 1;
-    const prev = (lastStateOTY >> i) & 1;
+    const prev = (lastState >> i) & 1;
 
     if (bit && !prev) {
-      logAlarm("OTY", alarmNamesOTY[15 - i]);
+      logAlarm(station, alarmNames[15 - i]);
     }
 
     if (bit) hasActive = true;
 
     const div = document.createElement('div');
     div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    div.textContent = alarmNamesOTY[15 - i] + (bit ? ' 🔥' : ' ✅');
+    div.textContent = alarmNames[15 - i] + (bit ? ' 🔥' : ' ✅');
     container.appendChild(div);
   }
 
-  toggleAlarmTab(0, hasActive);
-  lastStateOTY = value;
+  toggleAlarmTab(station === "OTY" ? 0 : 1, hasActive);
 }
 
 function logAlarm(station, alarm) {
@@ -218,16 +239,40 @@ function logAlarm(station, alarm) {
     station,
     alarm
   };
-
   alarmHistory.push(entry);
   localStorage.setItem('alarmHistory2026', JSON.stringify(alarmHistory));
-  addRowToTable(entry);
+  renderHistory(alarmHistory);
 }
 
-function addRowToTable(e) {
-  const row = document.createElement('tr');
-  row.innerHTML = `<td>${e.date}</td><td>${e.time}</td><td>${e.station}</td><td>${e.alarm}</td>`;
-  document.getElementById('alarm-history').appendChild(row);
+function renderHistory(data) {
+  ["OTY", "ITR"].forEach(st => {
+    const tbody = document.getElementById(`alarm-history-${st}`);
+    tbody.innerHTML = '';
+    data.forEach(e => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${e.date}</td><td>${e.time}</td><td>${e.station}</td><td>${e.alarm}</td>`;
+      tbody.appendChild(row);
+    });
+  });
+}
+
+function filterHistory(date) {
+  const filtered = alarmHistory.filter(e =>
+    new Date(e.date.split('/').reverse().join('-')).toISOString().slice(0,10) === date
+  );
+  renderHistory(filtered);
+}
+
+function showAllHistory() {
+  renderHistory(alarmHistory);
+}
+
+function clearHistory() {
+  if (confirm("¿Deseas borrar todo el historial de alarmas?")) {
+    alarmHistory = [];
+    localStorage.removeItem('alarmHistory2026');
+    renderHistory([]);
+  }
 }
 
 function downloadCSV() {
@@ -247,8 +292,8 @@ function downloadCSV() {
 
 function toggleAlarmTab(index, active) {
   const tabs = document.querySelectorAll('.tab');
-  if (active) tabs[index].classList.add('alarm-active-tab');
-  else tabs[index].classList.remove('alarm-active-tab');
+  active ? tabs[index].classList.add('alarm-active-tab')
+         : tabs[index].classList.remove('alarm-active-tab');
 }
 
 function showTab(i) {
@@ -263,4 +308,5 @@ function showTab(i) {
 
 </body>
 </html>
+
 
