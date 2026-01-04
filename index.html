@@ -23,7 +23,6 @@ body { font-family: Arial, sans-serif; }
 .tab.alarm-active-tab { background-color: red !important; color: white; }
 
 .tab-content { display: none; border: 1px solid #ccc; padding: 10px; }
-
 .tab-content.active { display: block; }
 
 .main-container { display: flex; gap: 20px; }
@@ -38,8 +37,22 @@ body { font-family: Arial, sans-serif; }
   font-size: 12px;
 }
 
-.active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
-.inactive { background-color: #e5ffe5; color: #007000; }
+/* ===== SVG ===== */
+.alarm {
+  stroke: green;
+  fill: green;
+  transition: all 0.3s ease;
+}
+
+.alarm.normal {
+  stroke: green;
+  fill: green;
+}
+
+.alarm.alarm-on {
+  stroke: red;
+  fill: red;
+}
 
 .history-container { width: 50%; }
 
@@ -50,23 +63,6 @@ th, td { border: 1px solid #ccc; padding: 4px; text-align: center; }
 th { background-color: #f1f1f1; }
 
 button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer; }
-
-.alarm {
-  stroke: green;
-  fill: green;
-  transition: all 0.3s ease;
-}
-
-.alarm.alarm-on {
-  stroke: red;
-  fill: red;
-}
-
-.alarm.warning {
-  stroke: orange;
-  fill: orange;
-}
-
 </style>
 </head>
 
@@ -77,11 +73,11 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
 <div class="tabs">
   <div class="tab active" onclick="showTab(0)">Historial OTY</div>
   <div class="tab" onclick="showTab(1)">Historial ITR</div>
-  <div class="tab" onclick="showTab(2)">Alarmas OTYY</div>
+  <div class="tab" onclick="showTab(2)">Alarmas OTY</div>
   <div class="tab" onclick="showTab(3)">Alarmas ITR</div>
 </div>
 
-<!-- ================= HISTORIAL OTY (SIN CAMBIOS) ================= -->
+<!-- ================= HISTORIAL OTY ================= -->
 <div id="tab-0" class="tab-content active">
   <div class="main-container">
     <div class="alarms-container">
@@ -105,7 +101,7 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
   </div>
 </div>
 
-<!-- ================= HISTORIAL ITR (SIN CAMBIOS) ================= -->
+<!-- ================= HISTORIAL ITR ================= -->
 <div id="tab-1" class="tab-content">
   <div class="main-container">
     <div class="alarms-container">
@@ -129,11 +125,10 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
   </div>
 </div>
 
-<!-- ================= ALARMAS OTY (VACÍA) ================= -->
+<!-- ================= ALARMAS OTY ================= -->
 <div id="tab-2" class="tab-content">
- <div id="tab-alarmas-oty" class="tab-content">
 
-  <svg id="svg-oty" viewBox="0 0 600 400" width="100%" height="100%">
+  <svg id="svg-oty" viewBox="0 0 600 400" width="100%" height="400">
 
     <!-- Caseta -->
     <polygon points="300,40 60,160 540,160"
@@ -142,40 +137,36 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
     <rect x="60" y="160" width="480" height="200"
           fill="none" stroke="#000" stroke-width="3"/>
 
-    <!-- ===== ALARMA TEMPERATURA ===== -->
+    <!-- ===== TEMPERATURA ===== -->
     <g id="oty-temp" class="alarm normal">
-      <!-- Termómetro -->
       <line x1="300" y1="190" x2="300" y2="260"
             stroke-width="8" stroke-linecap="round"/>
-
       <circle cx="300" cy="280" r="16"/>
-      <text x="300" y="320" text-anchor="middle"
-            font-size="14">Temperatura</text>
+      <text x="300" y="320" text-anchor="middle" font-size="14">
+        Temperatura
+      </text>
     </g>
 
-    <!-- ===== ALARMA TIERRA ===== -->
+    <!-- ===== TIERRA ===== -->
     <g id="oty-tierra" class="alarm normal">
-      <!-- Símbolo tierra -->
       <line x1="450" y1="210" x2="450" y2="260" stroke-width="4"/>
       <line x1="430" y1="260" x2="470" y2="260" stroke-width="4"/>
       <line x1="435" y1="270" x2="465" y2="270" stroke-width="3"/>
       <line x1="440" y1="280" x2="460" y2="280" stroke-width="2"/>
-
-      <text x="450" y="320" text-anchor="middle"
-            font-size="14">Tierra</text>
+      <text x="450" y="320" text-anchor="middle" font-size="14">
+        Tierra
+      </text>
     </g>
 
   </svg>
 </div>
 
-</div>
-
-<!-- ================= ALARMAS ITR (VACÍA) ================= -->
+<!-- ================= ALARMAS ITR ================= -->
 <div id="tab-3" class="tab-content">
   <h3>Alarmas ITR</h3>
-  <!-- Vacío por ahora -->
 </div>
 
+<!-- ===== TU SCRIPT ORIGINAL (SIN CAMBIOS) ===== -->
 <script>
 const client = mqtt.connect(
   'wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt',
@@ -332,32 +323,32 @@ function showTab(i) {
     c.classList.toggle('active', x === i)
   );
 }
+
 </script>
 
+<!-- ===== FUNCIONES SVG ===== -->
 <script>
-  function activarAlarma(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList shows
-    el.classList.remove("normal");
-    el.classList.add("alarm-on");
-  }
+function activarAlarma(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("normal");
+  el.classList.add("alarm-on");
+}
 
-  function desactivarAlarma(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList.remove("alarm-on");
-    el.classList.add("normal");
-  }
+function desactivarAlarma(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("alarm-on");
+  el.classList.add("normal");
+}
 </script>
 
+<!-- ===== PRUEBA (BORRABLE) ===== -->
 <script>
-  setTimeout(() => activarAlarma("oty-temp"), 2000);
-  setTimeout(() => activarAlarma("oty-tierra"), 4000);
-  setTimeout(() => desactivarAlarma("oty-temp"), 6000);
+setTimeout(() => activarAlarma("oty-temp"), 2000);
+setTimeout(() => activarAlarma("oty-tierra"), 4000);
+setTimeout(() => desactivarAlarma("oty-temp"), 6000);
 </script>
-
 
 </body>
 </html>
-
