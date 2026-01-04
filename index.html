@@ -26,10 +26,6 @@ body { font-family: Arial, sans-serif; }
 
 .tab-content.active { display: block; }
 
-.main-container { display: flex; gap: 20px; }
-
-.alarms-container { width: 50%; }
-
 .alarm {
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -40,8 +36,6 @@ body { font-family: Arial, sans-serif; }
 
 .active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
 .inactive { background-color: #e5ffe5; color: #007000; }
-
-.history-container { width: 50%; }
 
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
@@ -58,56 +52,54 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
 <h2>Estado de Alarmas ESP32 (EMQX)</h2>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab(0)">Estación OTY</div>
-  <div class="tab" onclick="showTab(1)">Estación ITR</div>
+  <div class="tab active" onclick="showTab(0)">Historial OTY</div>
+  <div class="tab" onclick="showTab(1)">Alarmas OTY</div>
+  <div class="tab" onclick="showTab(2)">Historial ITR</div>
+  <div class="tab" onclick="showTab(3)">Alarmas ITR</div>
 </div>
 
-<!-- ================= OTY ================= -->
+<!-- ===== Historial OTY ===== -->
 <div id="tab-0" class="tab-content active">
-  <div class="main-container">
-    <div class="alarms-container">
-      <div id="alarms-OTY"></div>
-    </div>
+  <h3>Historial OTY</h3>
+  <input type="date" onchange="filterHistory('OTY', this.value)">
+  <button onclick="showAllHistory('OTY')">Mostrar todo</button>
+  <button onclick="clearHistory('OTY')">Limpiar historial</button>
+  <button onclick="downloadCSV('OTY')">Descargar Excel</button>
 
-    <div class="history-container">
-      <h3>Historial OTY</h3>
-      <input type="date" onchange="filterHistory('OTY', this.value)">
-      <button onclick="showAllHistory('OTY')">Mostrar todo</button>
-      <button onclick="clearHistory('OTY')">Limpiar historial</button>
-      <button onclick="downloadCSV('OTY')">Descargar Excel</button>
-
-      <table>
-        <thead>
-          <tr><th>Fecha</th><th>Hora</th><th>Estación</th><th>Alarma</th></tr>
-        </thead>
-        <tbody id="alarm-history-OTY"></tbody>
-      </table>
-    </div>
-  </div>
+  <table>
+    <thead>
+      <tr><th>Fecha</th><th>Hora</th><th>Estación</th><th>Alarma</th></tr>
+    </thead>
+    <tbody id="alarm-history-OTY"></tbody>
+  </table>
 </div>
 
-<!-- ================= ITR ================= -->
+<!-- ===== Alarmas OTY ===== -->
 <div id="tab-1" class="tab-content">
-  <div class="main-container">
-    <div class="alarms-container">
-      <div id="alarms-ITR"></div>
-    </div>
+  <h3>Alarmas OTY</h3>
+  <div id="alarms-OTY"></div>
+</div>
 
-    <div class="history-container">
-      <h3>Historial ITR</h3>
-      <input type="date" onchange="filterHistory('ITR', this.value)">
-      <button onclick="showAllHistory('ITR')">Mostrar todo</button>
-      <button onclick="clearHistory('ITR')">Limpiar historial</button>
-      <button onclick="downloadCSV('ITR')">Descargar Excel</button>
+<!-- ===== Historial ITR ===== -->
+<div id="tab-2" class="tab-content">
+  <h3>Historial ITR</h3>
+  <input type="date" onchange="filterHistory('ITR', this.value)">
+  <button onclick="showAllHistory('ITR')">Mostrar todo</button>
+  <button onclick="clearHistory('ITR')">Limpiar historial</button>
+  <button onclick="downloadCSV('ITR')">Descargar Excel</button>
 
-      <table>
-        <thead>
-          <tr><th>Fecha</th><th>Hora</th><th>Estación</th><th>Alarma</th></tr>
-        </thead>
-        <tbody id="alarm-history-ITR"></tbody>
-      </table>
-    </div>
-  </div>
+  <table>
+    <thead>
+      <tr><th>Fecha</th><th>Hora</th><th>Estación</th><th>Alarma</th></tr>
+    </thead>
+    <tbody id="alarm-history-ITR"></tbody>
+  </table>
+</div>
+
+<!-- ===== Alarmas ITR ===== -->
+<div id="tab-3" class="tab-content">
+  <h3>Alarmas ITR</h3>
+  <div id="alarms-ITR"></div>
 </div>
 
 <script>
@@ -127,10 +119,8 @@ const alarmNames = [
 
 let alarmHistoryOTY = [];
 let alarmHistoryITR = [];
-
 let visibleHistoryOTY = [];
 let visibleHistoryITR = [];
-
 let lastState = 0;
 
 window.onload = () => {
@@ -171,7 +161,7 @@ function updateStation(station, value) {
     cont.appendChild(d);
   }
 
-  toggleAlarmTab(station === 'OTY' ? 0 : 1, active);
+  toggleAlarmTab(station === 'OTY' ? 1 : 3, active);
 }
 
 function logAlarm(st, al) {
@@ -185,10 +175,8 @@ function logAlarm(st, al) {
 
   const ref = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
   ref.push(e);
-
   localStorage.setItem(`alarmHistory${st}_2026`, JSON.stringify(ref));
-
-  showAllHistory(st); // refresca vista y tabla
+  showAllHistory(st);
 }
 
 function renderHistory(st, data) {
@@ -226,20 +214,16 @@ function clearHistory(st) {
 
   if (st === 'OTY') {
     alarmHistoryOTY = [];
-    visibleHistoryOTY = [];
     localStorage.removeItem('alarmHistoryOTY_2026');
   } else {
     alarmHistoryITR = [];
-    visibleHistoryITR = [];
     localStorage.removeItem('alarmHistoryITR_2026');
   }
-
   renderHistory(st, []);
 }
 
 function downloadCSV(st) {
   const src = st === 'OTY' ? visibleHistoryOTY : visibleHistoryITR;
-
   let csv = 'Fecha,Hora,Estación,Alarma\n';
   src.forEach(e => {
     csv += `"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`;
@@ -247,12 +231,10 @@ function downloadCSV(st) {
 
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement('a');
   a.href = url;
   a.download = `historial_${st}_2026.csv`;
   a.click();
-
   URL.revokeObjectURL(url);
 }
 
@@ -271,8 +253,5 @@ function showTab(i) {
 }
 </script>
 
-
 </body>
 </html>
-
-
