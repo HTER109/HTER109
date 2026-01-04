@@ -227,6 +227,8 @@ function updateStation(station, value) {
     d.textContent = alarmNames[15 - i] + (bit ? ' 🔥' : ' ✅');
     cont.appendChild(d);
   }
+  toggleAlarmTab(station === 'OTY' ? 0 : 1, active);
+}
 
 function updateSvgOTY(value) {
   // Bit 11 → Temperatura
@@ -243,11 +245,7 @@ function updateSvgOTY(value) {
     desactivarAlarma("oty-tierra");
   }
 }
-  
 
-  
-  toggleAlarmTab(station === 'OTY' ? 0 : 1, active);
-}
 
 function logAlarm(st, al) {
   const now = new Date();
@@ -363,12 +361,7 @@ function desactivarAlarma(id) {
 }
 </script>
 
-<!-- ===== PRUEBA (BORRABLE) ===== -->
-<script>
-setTimeout(() => activarAlarma("oty-temp"), 2000);
-setTimeout(() => activarAlarma("oty-tierra"), 4000);
-setTimeout(() => desactivarAlarma("oty-temp"), 6000);
-</script>
+
 
 </body>
 </html>
