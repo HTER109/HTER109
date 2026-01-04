@@ -200,10 +200,15 @@ client.on('connect', () => client.subscribe('esp32/External_Alarms_2'));
 
 client.on('message', (t, m) => {
   const value = (m[0] << 8) | m[1];
+
   updateStation('OTY', value);
   updateStation('ITR', value);
+
+  updateSvgOTY(value);   // 👈 NUEVO
+
   lastState = value;
 });
+
 
 function updateStation(station, value) {
   const cont = document.getElementById(`alarms-${station}`);
@@ -223,6 +228,24 @@ function updateStation(station, value) {
     cont.appendChild(d);
   }
 
+function updateSvgOTY(value) {
+  // Bit 11 → Temperatura
+  if ((value >> 11) & 1) {
+    activarAlarma("oty-temp");
+  } else {
+    desactivarAlarma("oty-temp");
+  }
+
+  // Bit 10 → Tierra
+  if ((value >> 10) & 1) {
+    activarAlarma("oty-tierra");
+  } else {
+    desactivarAlarma("oty-tierra");
+  }
+}
+  
+
+  
   toggleAlarmTab(station === 'OTY' ? 0 : 1, active);
 }
 
