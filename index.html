@@ -344,21 +344,6 @@ function updateStation(station, value) {
 
 function updateSvgOTY(value) {
 
-    // Bit 6 → RECTIFICADOR CD (LIBRE 2)
-  if ((value >> 6) & 1) {
-    activarSvg("oty-rectifier");
-  } else {
-    desactivarSvg("oty-rectifier");
-  }
-
-  // Bit 5 → BREAKERS (LIBRE 3)
-  if ((value >> 5) & 1) {
-    activarSvg("oty-breakers");
-  } else {
-    desactivarSvg("oty-breakers");
-  }
-
-
   // Bit 11 → Temperatura
   if ((value >> 11) & 1) {
     activarSvg("oty-temp");
@@ -385,6 +370,20 @@ function updateSvgOTY(value) {
     activarSvg("oty-person");
   } else {
     desactivarSvg("oty-person");
+  }
+
+      // Bit 6 → RECTIFICADOR CD (LIBRE 2)
+  if ((value >> 6) & 1) {
+    activarSvg("oty-rectifier");
+  } else {
+    desactivarSvg("oty-rectifier");
+  }
+
+  // Bit 5 → BREAKERS (LIBRE 3)
+  if ((value >> 5) & 1) {
+    activarSvg("oty-breakers");
+  } else {
+    desactivarSvg("oty-breakers");
   }
 }
 
