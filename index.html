@@ -408,19 +408,18 @@ function showTab(i) {
 
 <!-- ===== FUNCIONES SVG ===== -->
 <script>
-function activarAlarma(id) {
+function activarSvg(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.classList.remove("normal");
   el.classList.add("alarm-on");
 }
 
-function desactivarAlarma(id) {
+function desactivarSvg(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.classList.remove("alarm-on");
-  el.classList.add("normal");
 }
+
 </script>
 
 
