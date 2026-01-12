@@ -150,7 +150,8 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
   </text>
 
   <!-- ===== PERSONA ===== -->
-  <g id="oty-person" transform="translate(110,235)" fill="none">
+ <g id="oty-person" class="svg-alarm" transform="translate(110,235)">
+
 
     <circle cx="15" cy="10" r="8"/>
     <line x1="15" y1="18" x2="15" y2="45"/>
@@ -161,7 +162,8 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
   </g>
 
   <!-- ===== BATERIA ===== -->
-  <g id="oty-battery" transform="translate(200,245)">
+ <g id="oty-battery" class="svg-alarm" transform="translate(200,245)">
+
 
     <!-- Cuerpo -->
     <rect x="0" y="15" width="70" height="35" fill="none"/>
@@ -290,6 +292,20 @@ function updateSvgOTY(value) {
   } else {
     desactivarAlarma("oty-tierra");
   }
+
+  // Bit 7 → BAT EN OPER
+  if ((value >> 7) & 1) {
+    activarSvg("oty-battery");
+  } else {
+    desactivarSvg("oty-battery");
+  }
+
+  // Bit 8 → PRESENCIA / PERSONA (ejemplo)
+  if ((value >> 8) & 1) {
+    activarSvg("oty-person");
+  } else {
+    desactivarSvg("oty-person");
+  }  
 }
 
 
