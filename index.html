@@ -41,21 +41,26 @@ body { font-family: Arial, sans-serif; }
 .inactive { background-color: #e5ffe5; color: #007000; }
 
 /* ===== SVG ===== */
+
+/* Estado NORMAL */
 .svg-alarm {
-  stroke: green;
-  fill: green;
-  transition: all 0.3s ease;
+  stroke: #222;
+  fill: none;
+  transition: stroke 0.3s ease, fill 0.3s ease;
 }
 
+/* Estado ALARMA */
 .svg-alarm.alarm-on {
   stroke: red;
   fill: red;
 }
 
+/* Heredar correctamente a los elementos internos */
 .svg-alarm * {
   stroke: inherit;
   fill: inherit;
 }
+
 
 
 .history-container { width: 50%; }
