@@ -52,6 +52,12 @@ body { font-family: Arial, sans-serif; }
   fill: red;
 }
 
+.svg-alarm * {
+  stroke: inherit;
+  fill: inherit;
+}
+
+
 .history-container { width: 50%; }
 
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -279,18 +285,20 @@ function updateStation(station, value) {
 }
 
 function updateSvgOTY(value) {
+function updateSvgOTY(value) {
+
   // Bit 11 → Temperatura
   if ((value >> 11) & 1) {
-    activarAlarma("oty-temp");
+    activarSvg("oty-temp");
   } else {
-    desactivarAlarma("oty-temp");
+    desactivarSvg("oty-temp");
   }
 
   // Bit 10 → Tierra
   if ((value >> 10) & 1) {
-    activarAlarma("oty-tierra");
+    activarSvg("oty-tierra");
   } else {
-    desactivarAlarma("oty-tierra");
+    desactivarSvg("oty-tierra");
   }
 
   // Bit 7 → BAT EN OPER
@@ -300,13 +308,14 @@ function updateSvgOTY(value) {
     desactivarSvg("oty-battery");
   }
 
-  // Bit 8 → PRESENCIA / PERSONA (ejemplo)
+  // Bit 8 → Persona / Presencia
   if ((value >> 8) & 1) {
     activarSvg("oty-person");
   } else {
     desactivarSvg("oty-person");
-  }  
+  }
 }
+
 
 
 function logAlarm(st, al) {
