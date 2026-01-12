@@ -42,21 +42,23 @@ body { font-family: Arial, sans-serif; }
 
 /* ===== SVG ===== */
 
+/* ===== SVG ===== */
 .svg-alarm {
-  stroke: #555;
-  fill: #555;
+  stroke: #555;       /* líneas visibles */
+  fill: none;         /* SIN relleno en estado normal */
   transition: all 0.3s ease;
 }
 
 .svg-alarm.alarm-on {
   stroke: red;
-  fill: red;
+  fill: red;          /* SOLO se rellena cuando hay alarma */
 }
 
 .svg-alarm * {
   stroke: inherit;
   fill: inherit;
 }
+
 
 
 
