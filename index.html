@@ -42,20 +42,17 @@ body { font-family: Arial, sans-serif; }
 
 /* ===== SVG ===== */
 
-/* Estado NORMAL */
 .svg-alarm {
-  stroke: #222;
-  fill: none;
-  transition: stroke 0.3s ease, fill 0.3s ease;
+  stroke: #555;
+  fill: #555;
+  transition: all 0.3s ease;
 }
 
-/* Estado ALARMA */
 .svg-alarm.alarm-on {
   stroke: red;
   fill: red;
 }
 
-/* Heredar correctamente a los elementos internos */
 .svg-alarm * {
   stroke: inherit;
   fill: inherit;
@@ -180,12 +177,12 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
     <rect x="0" y="15" width="70" height="35" fill="none"/>
 
     <!-- Tapones -->
-    <rect x="15" y="5" width="10" height="10" fill="#000"/>
-    <rect x="45" y="5" width="10" height="10" fill="#000"/>
+    <rect x="15" y="5" width="10" height="10"/>
+    <rect x="45" y="5" width="10" height="10"/>
 
     <!-- Simbolos -->
-    <text x="10" y="40" font-size="14" fill="#000">+</text>
-    <text x="55" y="40" font-size="14" fill="#000">−</text>
+    <text x="10" y="40" font-size="14">+</text>
+    <text x="55" y="40" font-size="14">−</text>
 
   </g>
 
