@@ -135,46 +135,49 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
       fill="none" stroke="#000" stroke-width="3"/>
 
 <!-- ===== HABITACION DE BATERIAS ===== -->
-<g id="oty-room-batt" stroke="#000" fill="none">
+<g id="oty-room-batt" stroke="#000" stroke-width="2">
 
   <!-- Cuarto -->
-  <rect x="90" y="200" width="200" height="130"
-        stroke-width="2"/>
+  <rect x="80" y="210" width="220" height="130" fill="none"/>
 
   <!-- Titulo -->
-  <text x="190" y="193"
+  <text x="190" y="205"
         text-anchor="middle"
         font-size="14"
-        font-weight="bold">
+        font-weight="bold"
+        fill="#000">
     Habitación de Baterías
   </text>
 
-  <!-- Persona -->
-  <g id="oty-person" transform="translate(120,235)">
+  <!-- ===== PERSONA ===== -->
+  <g id="oty-person" transform="translate(110,235)" fill="none">
 
-    <circle cx="15" cy="10" r="8" stroke-width="2"/>
-    <line x1="15" y1="18" x2="15" y2="45" stroke-width="2"/>
-    <line x1="0" y1="30" x2="30" y2="30" stroke-width="2"/>
-    <line x1="15" y1="45" x2="5" y2="65" stroke-width="2"/>
-    <line x1="15" y1="45" x2="25" y2="65" stroke-width="2"/>
+    <circle cx="15" cy="10" r="8"/>
+    <line x1="15" y1="18" x2="15" y2="45"/>
+    <line x1="0" y1="30" x2="30" y2="30"/>
+    <line x1="15" y1="45" x2="5" y2="65"/>
+    <line x1="15" y1="45" x2="25" y2="65"/>
 
   </g>
 
-  <!-- Bateria automotriz -->
-  <g id="oty-battery" transform="translate(190,250)">
+  <!-- ===== BATERIA ===== -->
+  <g id="oty-battery" transform="translate(200,245)">
 
-    <rect x="0" y="10" width="60" height="35"
-          stroke-width="2"/>
+    <!-- Cuerpo -->
+    <rect x="0" y="15" width="70" height="35" fill="none"/>
 
-    <rect x="10" y="0" width="10" height="10"/>
-    <rect x="40" y="0" width="10" height="10"/>
+    <!-- Tapones -->
+    <rect x="15" y="5" width="10" height="10" fill="#000"/>
+    <rect x="45" y="5" width="10" height="10" fill="#000"/>
 
-    <text x="12" y="35" font-size="14">+</text>
-    <text x="45" y="35" font-size="14">−</text>
+    <!-- Simbolos -->
+    <text x="10" y="40" font-size="14" fill="#000">+</text>
+    <text x="55" y="40" font-size="14" fill="#000">−</text>
 
   </g>
 
 </g>
+
 
 
   <!-- TEMPERATURA -->
