@@ -280,11 +280,9 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
 
 <!-- ===== TU SCRIPT ORIGINAL (SIN CAMBIOS) ===== -->
 <script>
-const client = mqtt.connect(
-  'wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt',
-  { clientId: 'web_' + Math.random().toString(16).substr(2,8),
-    username: 'Olivas', password: 'Jangel27' }
-);
+
+const BACKEND_URL = 'http://localhost:3000'; // luego se cambia
+
 
 const alarmNames = [
  "FALLA ALIM COM","GPO ELEC OPER","FALLA FUS DIST",
@@ -294,13 +292,36 @@ const alarmNames = [
  "LIBRE 5","LIBRE 6","LIBRE 7","LIBRE 8"
 ];
 
+function initAlarms(station) {
+  const cont = document.getElementById(`alarms-${station}`);
+  cont.innerHTML = '';
+
+  for (let i = 0; i < 16; i++) {
+    const d = document.createElement('div');
+    d.className = 'alarm inactive';
+    d.id = `alarm-${station}-${i}`;
+    d.textContent = alarmNames[i] + ' ✅';
+    cont.appendChild(d);
+  }
+}
+
+
 let alarmHistoryOTY = [];
 let alarmHistoryITR = [];
 let visibleHistoryOTY = [];
 let visibleHistoryITR = [];
-let lastState = 0;
+let lastStateOTY = 0;
+let lastStateITR = 0;
 
-window.onload = () => {
+/* ===== PARTE 5.3 ===== */
+let historyLoaded = false;
+
+window.onload = async () => {
+
+
+initAlarms('OTY');
+  initAlarms('ITR');
+
   alarmHistoryOTY = JSON.parse(localStorage.getItem('alarmHistoryOTY_2026')) || [];
   alarmHistoryITR = JSON.parse(localStorage.getItem('alarmHistoryITR_2026')) || [];
 
@@ -309,42 +330,38 @@ window.onload = () => {
 
   renderHistory('OTY', visibleHistoryOTY);
   renderHistory('ITR', visibleHistoryITR);
+
+  await loadHistoryFromBackend('OTY');
+  await loadHistoryFromBackend('ITR');
+  historyLoaded = true;
 };
 
-client.on('connect', () => client.subscribe('esp32/External_Alarms_2'));
-
-client.on('message', (t, m) => {
-  const value = (m[0] << 8) | m[1];
-
-  updateStation('OTY', value);
-  updateStation('ITR', value);
-
-  updateSvgOTY(value);   // 👈 NUEVO
-
-  lastState = value;
-});
-
-
 function updateStation(station, value) {
+  let lastStateRef = station === 'OTY' ? lastStateOTY : lastStateITR;
+
   const cont = document.getElementById(`alarms-${station}`);
-  cont.innerHTML = '';
   let active = false;
 
   for (let i = 15; i >= 0; i--) {
-    const bit = (value >> i) & 1;
-    const prev = (lastState >> i) & 1;
+  const bit = (value >> i) & 1;
+  const prev = (lastStateRef >> i) & 1;
 
-    if (bit && !prev) logAlarm(station, alarmNames[15 - i]);
-    if (bit) active = true;
 
-    const d = document.createElement('div');
-    d.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    d.textContent = alarmNames[15 - i] + (bit ? ' 🔥' : ' ✅');
-    cont.appendChild(d);
-  }
-  toggleAlarmTab(station === 'OTY' ? 0 : 1, active);
+  const idx = 15 - i;
+  const d = document.getElementById(`alarm-${station}-${idx}`);
+
+  if (!d) continue;
+
+  d.className = 'alarm ' + (bit ? 'active' : 'inactive');
+  d.textContent = alarmNames[idx] + (bit ? ' 🔥' : ' ✅');
+
+  if (bit) active = true;
 }
 
+if (station === 'OTY') lastStateOTY = value;
+  else lastStateITR = value;
+
+}
 
 function updateSvgOTY(value) {
 
@@ -393,100 +410,109 @@ function updateSvgOTY(value) {
 
 
 
-function logAlarm(st, al) {
-  const now = new Date();
-  const e = {
-    date: now.toLocaleDateString('es-MX'),
-    time: now.toLocaleTimeString('es-MX'),
-    station: st,
-    alarm: al
-  };
+async function loadHistoryFromBackend(station) {
+  const res = await fetch(`${BACKEND_URL}/api/history/${station}`);
+  const rows = await res.json();
 
-  const ref = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
-  ref.push(e);
+  const parsed = rows.map(r => {
+    const d = new Date(r.timestamp);
+    return {
+      date: d.toLocaleDateString('es-MX'),
+      time: d.toLocaleTimeString('es-MX'),
+      station: r.station,
+      alarm: `${r.alarm_name} ${r.state}`
+    };
+  });
 
-  localStorage.setItem(`alarmHistory${st}_2026`, JSON.stringify(ref));
-  showAllHistory(st);
+  if (station === 'OTY') {
+    alarmHistoryOTY = parsed;
+    visibleHistoryOTY = [...parsed];
+  } else {
+    alarmHistoryITR = parsed;
+    visibleHistoryITR = [...parsed];
+  }
+  renderHistory(station, parsed);
 }
 
 function renderHistory(st, data) {
   const tb = document.getElementById(`alarm-history-${st}`);
   tb.innerHTML = '';
   data.forEach(e => {
-    tb.innerHTML += `<tr>
-      <td>${e.date}</td>
-      <td>${e.time}</td>
-      <td>${e.station}</td>
-      <td>${e.alarm}</td>
-    </tr>`;
+    tb.innerHTML += `<tr><td>${e.date}</td><td>${e.time}</td><td>${e.station}</td><td>${e.alarm}</td></tr>`;
   });
+}
 
-  if (st === 'OTY') visibleHistoryOTY = data;
-  else visibleHistoryITR = data;
+function showAllHistory(st) {
+  renderHistory(st, st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR);
 }
 
 function filterHistory(st, d) {
   const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
-  const filtered = src.filter(e =>
-    new Date(e.date.split('/').reverse().join('-'))
-      .toISOString().slice(0,10) === d
-  );
-  renderHistory(st, filtered);
+  renderHistory(st, src.filter(e =>
+    new Date(e.date.split('/').reverse().join('-')).toISOString().slice(0,10) === d
+  ));
 }
 
-function showAllHistory(st) {
-  const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
-  renderHistory(st, [...src]);
-}
-
-function clearHistory(st) {
+async function clearHistory(st) {
   if (!confirm(`¿Borrar historial de ${st}?`)) return;
-
-  if (st === 'OTY') {
-    alarmHistoryOTY = [];
-    visibleHistoryOTY = [];
-    localStorage.removeItem('alarmHistoryOTY_2026');
-  } else {
-    alarmHistoryITR = [];
-    visibleHistoryITR = [];
-    localStorage.removeItem('alarmHistoryITR_2026');
-  }
-
+  await fetch(`${BACKEND_URL}/api/history/${st}`, { method: 'DELETE' });
+  if (st === 'OTY') alarmHistoryOTY = [];
+  else alarmHistoryITR = [];
   renderHistory(st, []);
 }
 
 function downloadCSV(st) {
-  const src = st === 'OTY' ? visibleHistoryOTY : visibleHistoryITR;
-
+  const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
   let csv = 'Fecha,Hora,Estación,Alarma\n';
-  src.forEach(e => {
-    csv += `"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`;
-  });
-
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-
+  src.forEach(e => csv += `"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`);
   const a = document.createElement('a');
-  a.href = url;
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   a.download = `historial_${st}_2026.csv`;
   a.click();
-
-  URL.revokeObjectURL(url);
 }
 
 function toggleAlarmTab(i, a) {
-  document.querySelectorAll('.tab')[i]
-    .classList.toggle('alarm-active-tab', a);
+  document.querySelectorAll('.tab')[i].classList.toggle('alarm-active-tab', a);
 }
 
 function showTab(i) {
-  document.querySelectorAll('.tab').forEach((t, x) =>
-    t.classList.toggle('active', x === i)
-  );
-  document.querySelectorAll('.tab-content').forEach((c, x) =>
-    c.classList.toggle('active', x === i)
-  );
+  document.querySelectorAll('.tab').forEach((t, x) => t.classList.toggle('active', x === i));
+  document.querySelectorAll('.tab-content').forEach((c, x) => c.classList.toggle('active', x === i));
 }
+
+/* ===== SSE ===== */
+const evtSource = new EventSource(`${BACKEND_URL}/api/events`);
+
+
+evtSource.onmessage = e => {
+  const data = JSON.parse(e.data);
+ console.log('📡 SSE recibido:', data);
+  // 1️⃣ Estado en tiempo real (rectángulos + SVG)
+  if (data.type === 'state') {
+    updateStation('OTY', data.value);
+    updateStation('ITR', data.value);
+    updateSvgOTY(data.value);
+      }
+
+  // 2️⃣ Evento de historial en vivo
+  if (data.type === 'history') {
+    const d = new Date(data.timestamp);
+    const entry = {
+      date: d.toLocaleDateString('es-MX'),
+      time: d.toLocaleTimeString('es-MX'),
+      station: data.station,
+      alarm: `${data.alarm} ${data.state}`
+    };
+
+    if (data.station === 'OTY') {
+      alarmHistoryOTY.unshift(entry);
+      renderHistory('OTY', alarmHistoryOTY);
+    } else {
+      alarmHistoryITR.unshift(entry);
+      renderHistory('ITR', alarmHistoryITR);
+    }
+  }
+};
 
 </script>
 
@@ -510,3 +536,4 @@ function desactivarSvg(id) {
 
 </body>
 </html>
+
