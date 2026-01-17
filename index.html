@@ -444,15 +444,33 @@ function renderHistory(st, data) {
 }
 
 function showAllHistory(st) {
-  renderHistory(st, st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR);
+  if (st === 'OTY') {
+    visibleHistoryOTY = [...alarmHistoryOTY];
+    renderHistory(st, visibleHistoryOTY);
+  } else {
+    visibleHistoryITR = [...alarmHistoryITR];
+    renderHistory(st, visibleHistoryITR);
+  }
 }
+
 
 function filterHistory(st, d) {
   const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
-  renderHistory(st, src.filter(e =>
-    new Date(e.date.split('/').reverse().join('-')).toISOString().slice(0,10) === d
-  ));
+
+  const filtered = src.filter(e =>
+    new Date(e.date.split('/').reverse().join('-'))
+      .toISOString().slice(0, 10) === d
+  );
+
+  if (st === 'OTY') {
+    visibleHistoryOTY = filtered;
+  } else {
+    visibleHistoryITR = filtered;
+  }
+
+  renderHistory(st, filtered);
 }
+
 
 async function clearHistory(st) {
   if (!confirm(`¿Borrar historial de ${st}?`)) return;
