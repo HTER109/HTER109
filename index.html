@@ -463,14 +463,20 @@ async function clearHistory(st) {
 }
 
 function downloadCSV(st) {
-  const src = st === 'OTY' ? alarmHistoryOTY : alarmHistoryITR;
+  // ⬇️ Descargar SOLO lo que está visible
+  const src = st === 'OTY' ? visibleHistoryOTY : visibleHistoryITR;
+
   let csv = 'Fecha,Hora,Estación,Alarma\n';
-  src.forEach(e => csv += `"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`);
+  src.forEach(e => {
+    csv += `"${e.date}","${e.time}","${e.station}","${e.alarm}"\n`;
+  });
+
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   a.download = `historial_${st}_2026.csv`;
   a.click();
 }
+
 
 function toggleAlarmTab(i, a) {
   document.querySelectorAll('.tab')[i].classList.toggle('alarm-active-tab', a);
