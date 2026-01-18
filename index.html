@@ -247,10 +247,8 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
 </g> <!-- FIN PLANTA CD -->
 
 
-  
-
   <!-- TEMPERATURA -->
-  <g id="oty-temp" class="svg-alarm">
+<g id="oty-temp" class="svg-alarm" transform="translate(0,40)">
     <line x1="300" y1="190" x2="300" y2="260"
           stroke-width="8" stroke-linecap="round"/>
     <circle cx="300" cy="280" r="16"/>
@@ -259,8 +257,8 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
     </text>
   </g>
 
-  <!-- TIERRA -->
-  <g id="oty-tierra" class="svg-alarm">
+ <!-- TIERRA -->
+<g id="oty-tierra" class="svg-alarm" transform="translate(0,40)">
     <line x1="450" y1="210" x2="450" y2="260" stroke-width="4"/>
     <line x1="430" y1="260" x2="470" y2="260" stroke-width="4"/>
     <line x1="435" y1="270" x2="465" y2="270" stroke-width="3"/>
@@ -290,7 +288,7 @@ const alarmNames = [
  "FALLA RECT","ALTA TEMP","FALLA FUS VOLTA",
  "BAT EN OPER","BAJO VOLTAJE",
  "LIBRE 1","LIBRE 2","LIBRE 3","LIBRE 4",
- "LIBRE 5","LIBRE 6","LIBRE 7","LIBRE 8"
+ "LIBRE 5","LIBRE 6","LIBRE 7","LIBRE 18"
 ];
 
 function initAlarms(station) {
