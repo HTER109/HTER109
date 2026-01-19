@@ -239,6 +239,42 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
         Breakers
       </text>
     </g>
+
+<!-- ===== FLECHA HACIA PLANTA CD ===== -->
+<g id="arrow-to-cd" transform="translate(480,560)">
+  <line x1="0" y1="40" x2="0" y2="0"
+        stroke="#000" stroke-width="4"/>
+  <polygon points="-8,10 0,0 8,10"
+           fill="#000"/>
+</g>
+
+<!-- ===== ATS (AUTOMATIC TRANSFER SWITCH) ===== -->
+<g id="oty-ats" class="svg-alarm" transform="translate(420,600)">
+
+  <!-- Marco ATS -->
+  <rect x="0" y="0" width="160" height="120"
+        fill="none" stroke="#000" stroke-width="2"/>
+
+  <!-- Línea vertical (NORTE) -->
+  <line x1="80" y1="10" x2="80" y2="60"
+        stroke="#000" stroke-width="4"/>
+  <text x="90" y="35" font-size="12">ATS</text>
+
+  <!-- Línea hacia OESTE (GEN) -->
+  <line x1="80" y1="60" x2="20" y2="60"
+        stroke="red" stroke-width="4"/>
+  <text x="10" y="55" font-size="12" fill="red"
+        text-anchor="end">GEN</text>
+
+  <!-- Línea hacia ESTE (CFE) -->
+  <line x1="80" y1="60" x2="140" y2="60"
+        stroke="green" stroke-width="4"/>
+  <text x="150" y="55" font-size="12" fill="green"
+        text-anchor="start">CFE</text>
+
+</g>
+
+    
   </g>
 
 </svg>
