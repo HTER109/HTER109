@@ -243,51 +243,53 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
       </g> <!-- FIN PLANTA CD -->
 
 
-<!-- ===== FLECHA HACIA PLANTA CD (MAS GRUESA) ===== -->
+<!-- ===== FLECHA HACIA PLANTA CD (APUNTANDO AL NORTE) ===== -->
 <g id="arrow-to-cd" transform="translate(560,630)">
-  <line x1="0" y1="0" x2="0" y2="45"
+  <line x1="0" y1="60" x2="0" y2="15"
         stroke="#000" stroke-width="6"/>
-  <polygon points="-12,45 0,60 12,45"
+  <polygon points="-12,15 0,0 12,15"
            fill="#000"/>
 </g>
 
+
 <!-- ===== ATS (AUTOMATIC TRANSFER SWITCH) ===== -->
-<g id="oty-ats" class="svg-alarm" transform="translate(480,700)">
+<g id="oty-ats" class="svg-alarm" transform="translate(460,700)">
 
   <!-- Marco ATS -->
-  <rect x="0" y="0" width="200" height="130"
+  <rect x="0" y="0" width="230" height="130"
         fill="none" stroke="#000" stroke-width="2"/>
 
   <!-- Línea vertical (NORTE - ATS) -->
-  <line x1="100" y1="15" x2="100" y2="65"
+  <line x1="115" y1="15" x2="115" y2="65"
         stroke="#000" stroke-width="5"/>
-  <text x="110" y="45" font-size="14" font-weight="bold">
+  <text x="125" y="45" font-size="14" font-weight="bold" fill="#000">
     ATS
   </text>
 
   <!-- Línea hacia OESTE (GEN) -->
-  <line x1="100" y1="65" x2="25" y2="65"
-        stroke="red" stroke-width="5"/>
-  <text x="20" y="60" font-size="14" fill="red"
+  <line x1="115" y1="65" x2="25" y2="65"
+        stroke="#c00000" stroke-width="5"/>
+  <text x="20" y="60" font-size="14" fill="#c00000"
         text-anchor="end" font-weight="bold">
     GEN
   </text>
 
   <!-- Línea hacia ESTE (CFE) -->
-  <line x1="100" y1="65" x2="175" y2="65"
-        stroke="green" stroke-width="5"/>
-  <text x="180" y="60" font-size="14" fill="green"
+  <line x1="115" y1="65" x2="205" y2="65"
+        stroke="#00a000" stroke-width="5"/>
+  <text x="210" y="60" font-size="14" fill="#00a000"
         text-anchor="start" font-weight="bold">
     CFE
   </text>
 
-  <!-- Texto inferior -->
-  <text x="100" y="115" text-anchor="middle"
-        font-size="14" font-weight="bold">
+  <!-- Texto inferior FUERA del rectángulo -->
+  <text x="115" y="155" text-anchor="middle"
+        font-size="16" font-weight="bold" fill="#000">
     ATS
   </text>
 
 </g>
+
 
 
 </svg>
