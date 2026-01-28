@@ -42,16 +42,15 @@ body { font-family: Arial, sans-serif; }
 
 /* ===== SVG ===== */
 
-/* ===== SVG ===== */
 .svg-alarm {
-  stroke: #555;       /* líneas visibles */
-  fill: none;         /* SIN relleno en estado normal */
+  stroke: #555;       
+  fill: none;       
   transition: all 0.3s ease;
 }
 
 .svg-alarm.alarm-on {
   stroke: red;
-  fill: red;          /* SOLO se rellena cuando hay alarma */
+  fill: red;         
 }
 
 .svg-alarm * {
@@ -379,7 +378,7 @@ button, input[type="date"] { margin: 5px 4px; padding: 6px 10px; cursor: pointer
   <h3>Alarmas ITR</h3>
 </div>
 
-<!-- ===== TU SCRIPT ORIGINAL (SIN CAMBIOS) ===== -->
+<!-- ===== SCRIPT ORIGINAL  ===== -->
 <script>
 
 const BACKEND_URL = 'https://backend-alarms.onrender.com';
@@ -415,7 +414,7 @@ let visibleHistoryITR = [];
 let lastStateOTY = 0;
 let lastStateITR = 0;
 
-/* ===== PARTE 5.3 ===== */
+
 let historyLoaded = false;
 
 window.onload = async () => {
@@ -638,14 +637,14 @@ const evtSource = new EventSource(`${BACKEND_URL}/api/events`);
 evtSource.onmessage = e => {
   const data = JSON.parse(e.data);
  console.log('📡 SSE recibido:', data);
-  // 1️⃣ Estado en tiempo real (rectángulos + SVG)
+  // Estado en tiempo real (rectángulos + SVG)
   if (data.type === 'state') {
     updateStation('OTY', data.value);
     updateStation('ITR', data.value);
     updateSvgOTY(data.value);
       }
 
-  // 2️⃣ Evento de historial en vivo
+  // Evento de historial en vivo
   if (data.type === 'history') {
     const d = new Date(data.timestamp);
     const entry = {
